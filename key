@@ -1,1 +1,13 @@
-key
+// key.js
+const REGISTERED_USERS = [
+  {
+    accessKey: "CRIS-KING-2025-A",
+    username: "CrisUser1",
+    expire: "2026-01-31" // YYYY-MM-DD
+  },
+  {
+    accessKey: "CRIS-KING-2025-B",
+    username: "CrisUser2",
+    expire: "2025-12-31"
+  }
+];
