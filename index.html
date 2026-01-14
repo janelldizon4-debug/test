@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title id="pageTitle">Profit Monitor</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#00ffff">
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0b0f1a;
+  color: #fff;
+}
+
+/* HEADER */
+header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 50px;
+  background: #111;
+  display: flex;
+  align-items: center;
+  padding: 0 15px;
+  z-index: 1000;
+}
+
+.burger {
+  font-size: 26px;
+  cursor: pointer;
+  margin-right: 15px;
+}
+
+/* MENU */
+.menu {
+  position: fixed;
+  top: 50px;
+  left: -340px;
+  width: 340px;
+  height: calc(100% - 50px);
+  background: #111;
+  padding: 15px;
+  transition: left 0.3s;
+  overflow-y: auto;
+}
+.menu.open { left: 0; }
+
+.menu h3 {
+  color: #00ffff;
+  margin-top: 0;
+}
+
+.menu .month {
+  border-bottom: 1px solid #333;
+  padding: 8px 0;
+  font-size: 14px;
+}
+
+/* CONTENT */
+.container {
+  padding: 70px 15px 20px;
+}
+
+.section {
+  border: 1px solid #00ffff;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.section h3 {
+  margin-top: 0;
+  color: #00ffff;
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  border: 1px solid #00ffff;
+  padding: 10px;
+  text-align: center;
+}
+
+th { background: #111; }
+
+/* INPUT */
+input {
+  width: 100%;
+  padding: 8px;
+  background: #000;
+  border: 1px solid #00ffff;
+  color: #fff;
+}
+
+/* BUTTONS */
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+
+.add { background: #00ffff; }
+.reset { background: #ff4444; color: #fff; }
+</style>
+</head>
+
+
+
+<body>
+
+<header>
+  <div class="burger" onclick="toggleMenu()">☰</div>
+  <h3>Profit Monitoring</h3>
+</header>
+
+<div class="menu" id="menu">
+  <h3>Monthly Summary</h3>
+  <div id="menuList"></div>
+</div>
+
+<div class="container">
+
+  <!-- STING CONTAINER -->
+  <div class="section">
+    <h3>STING Monitoring</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Puhunan</th>
+          <th>Earnings</th>
+          <th>Profit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td id="monthSting"></td>
+          <td><input type="number" id="puhunanSting"></td>
+          <td><input type="number" id="earningsSting"></td>
+          <td id="profitSting">0</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- FROZEN CONTAINER -->
+  <div class="section">
+    <h3>FROZEN Monitoring</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Puhunan</th>
+          <th>Earnings</th>
+          <th>Profit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td id="monthFrozen"></td>
+          <td><input type="number" id="puhunanFrozen"></td>
+          <td><input type="number" id="earningsFrozen"></td>
+          <td id="profitFrozen">0</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <button class="add" onclick="addProfit()">ADD PROFIT</button>
+  <button class="reset" onclick="resetAll()">RESET ALL DATA</button>
+
+</div>
+
+<script>
+const months = [
+ "January","February","March","April","May","June",
+ "July","August","September","October","November","December"
+];
+
+const currentMonth = months[new Date().getMonth()];
+
+let data = JSON.parse(localStorage.getItem("profitData")) || {
+  sting: { monthly: {} },
+  frozen: { monthly: {} }
+};
+
+function init() {
+  monthSting.textContent = currentMonth;
+  monthFrozen.textContent = currentMonth;
+
+  profitSting.textContent = data.sting.monthly[currentMonth] || 0;
+  profitFrozen.textContent = data.frozen.monthly[currentMonth] || 0;
+
+  renderMenu();
+}
+
+function addProfit() {
+  saveType("sting", puhunanSting, earningsSting);
+  saveType("frozen", puhunanFrozen, earningsFrozen);
+
+  localStorage.setItem("profitData", JSON.stringify(data));
+
+  puhunanSting.value = "";
+  earningsSting.value = "";
+  puhunanFrozen.value = "";
+  earningsFrozen.value = "";
+
+  init();
+}
+
+function saveType(type, puhunanEl, earningsEl) {
+  const puhunan = Number(puhunanEl.value);
+  const earnings = Number(earningsEl.value);
+  if (!puhunan || !earnings) return;
+
+  const profit = earnings - puhunan;
+  if (profit <= 0) return;
+
+  data[type].monthly[currentMonth] =
+    (data[type].monthly[currentMonth] || 0) + profit;
+}
+
+function renderMenu() {
+  const list = document.getElementById("menuList");
+  list.innerHTML = "";
+
+  months.forEach(m => {
+    const div = document.createElement("div");
+    div.className = "month";
+    div.innerHTML = `
+      <strong>${m}</strong><br>
+      STING: ${data.sting.monthly[m] || 0}<br>
+      FROZEN: ${data.frozen.monthly[m] || 0}
+    `;
+    list.appendChild(div);
+  });
+}
+
+function toggleMenu() {
+  menu.classList.toggle("open");
+}
+
+function resetAll() {
+  if (confirm("Reset lahat ng data?")) {
+    localStorage.removeItem("profitData");
+    data = { sting: { monthly: {} }, frozen: { monthly: {} } };
+    init();
+  }
+}
+
+const menu = document.getElementById("menu");
+const monthSting = document.getElementById("monthSting");
+const monthFrozen = document.getElementById("monthFrozen");
+const puhunanSting = document.getElementById("puhunanSting");
+const earningsSting = document.getElementById("earningsSting");
+const puhunanFrozen = document.getElementById("puhunanFrozen");
+const earningsFrozen = document.getElementById("earningsFrozen");
+const profitSting = document.getElementById("profitSting");
+const profitFrozen = document.getElementById("profitFrozen");
+
+const currentYear = new Date().getFullYear();
+
+// Auto-update page title
+document.getElementById("pageTitle").textContent = `Profit Monitor ${currentYear}`;
+
+
+
+init();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js')
+    .then(() => console.log('Service Worker Registered'))
+    .catch(err => console.log('Service Worker Failed:', err));
+}
+</script>
+
+
+</body>
+</html>
